@@ -1,0 +1,45 @@
+version: '3'
+services:
+  mysql:
+    image: mariadb:10.2
+    command: --max_allowed_packet=256M
+    volumes:
+      - "./data/db:/var/lib/mysql:delegated"
+    ports:
+       - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+    restart: always
+  litespeed:
+    image: 'litespeedtech/openlitespeed:${OLS_VERSION}-${PHP_VERSION}'
+    env_file:
+      - .env
+    volumes:
+      - './lsws/conf:/usr/local/lsws/conf'
+      - './lsws/admin-conf:/usr/local/lsws/admin/conf'
+      - './bin/container:/usr/local/bin'
+      - './sites:/var/www/vhosts/'
+      - './acme:/root/.acme.sh/'
+      - './logs:/usr/local/lsws/logs/'
+      - './phpini:/usr/local/lsws/lsphp80/etc/php/8.0/litespeed/'
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+      - '9501:9501'
+      - '7080:7080'
+      - '9503:9503'
+    restart: always
+    environment:
+      TZ: '${TimeZone}'
+
+  phpmyadmin:
+    image: bitnami/phpmyadmin:5.0.2-debian-10-r72
+    ports:
+      - 8080:80
+      - 8443:443
+    environment:
+        DATABASE_HOST: mysql
+    restart: always    
